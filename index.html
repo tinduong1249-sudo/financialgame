@@ -144,7 +144,7 @@ const CONFIG = {
   SUPABASE_URL: '',          // hoặc dùng Supabase: 'https://abcd1234.supabase.co'
   SUPABASE_KEY: '',          // khóa "anon" / "publishable" của Supabase
   // Mã PIN chủ phòng đã mã hóa (mặc định là PIN 2026). Đổi PIN: mở link#host, bấm "Đổi mã PIN".
-  HOST_PIN_HASH: 'fd4574f67020ff3d6369cf9ef5e551d207023dc757a253609a930c02d526327c',
+  HOST_PIN_HASH: 'bdfac206d22f1b496de0e49c23f6726a9e004d56774d8ee4e434f099c956e27c',
   P1_TIME: 300, P2_TIME: 300 // thời gian mỗi giai đoạn (giây)
 };
 /* Hỗ trợ điện thoại đời cũ (iOS dưới 16, Chrome cũ) chưa có lệnh vẽ bo góc */
@@ -235,8 +235,9 @@ let netPromise = null;
 function loadNet() { return netPromise || (netPromise = loadNetInner()); }
 async function loadNetInner() {
   if (CONFIG.ABLY_KEY) {
-    if (await loadScript(['https://cdn.ably.com/lib/ably.min-2.js', 'https://cdn.jsdelivr.net/npm/ably@2/build/ably.min.js']) && window.Ably) {
-      try { NET.ab = new window.Ably.Realtime({ key:CONFIG.ABLY_KEY, clientId:ME, echoMessages:false }); NET.mode = 'ably'; } catch (e) { console.warn(e); }
+    // Tài khoản Ably mới (tính phí theo MAU) bắt buộc dùng thư viện @ably/pubsub-device 3.x
+    if (await loadScript(['https://cdn.jsdelivr.net/npm/@ably/pubsub-device@3/dist/cdn/ably.min.js', 'https://unpkg.com/@ably/pubsub-device@3/dist/cdn/ably.min.js']) && window.AblyPubSub) {
+      try { NET.ab = window.AblyPubSub.createClient({ key:CONFIG.ABLY_KEY, clientId:ME, echoMessages:false }); NET.mode = 'ably'; } catch (e) { console.warn(e); }
     }
     NET.ready = true; return;
   }
