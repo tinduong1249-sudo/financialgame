@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Thử tải · Hè Này Tiêu Gì?</title>
+<style>
+  body{margin:0;background:#141a26;color:#f4ead7;font:15px/1.5 system-ui,sans-serif;padding:24px;max-width:720px}
+  h1{font-size:22px;margin:0 0 8px}
+  label{display:block;margin:12px 0 4px;font-weight:600}
+  input{font:inherit;padding:8px 10px;border-radius:8px;border:1px solid #555;background:#1e2533;color:inherit;width:160px}
+  button{font:inherit;font-weight:700;padding:10px 18px;border-radius:10px;border:0;margin:16px 8px 0 0;cursor:pointer}
+  #go{background:#e3b23c;color:#1b1b1b}#stop{background:#444;color:#fff}
+  .box{background:#1e2533;border-radius:12px;padding:14px;margin-top:18px}
+  .sub{color:#b9b0a0;font-size:13px}
+  #log{white-space:pre-wrap;font:13px/1.45 ui-monospace,monospace;max-height:280px;overflow:auto}
+  b.big{font-size:28px;color:#e3b23c}
+</style>
+</head>
+<body>
+<h1>Thử tải: giả lập cả lớp vào phố Bạch Đằng</h1>
+<div class="sub">Trang này mở nhiều "bạn ảo" cùng lúc, mỗi bạn là một kết nối Ably thật, đi lại trên phố giống người thật. Cách dùng:
+1) Mở game ở chế độ chủ phòng trên laptop, ghi lại mã phòng. 2) Cho 3–5 bạn thật vào phố bằng điện thoại. 3) Mở trang này trên một máy khác, nhập mã phòng, bấm Bắt đầu. 4) Nhìn ô "Ably ≈ …/500" trên màn hình chủ phòng và hỏi các bạn thật xem có giật không.</div>
+<label>Mã phòng</label><input id="code" placeholder="vd 4821">
+<label>Số bạn ảo</label><input id="n" type="number" value="40" min="1" max="60">
+<label>Thời gian chạy (giây)</label><input id="dur" type="number" value="120" min="10" max="900">
+<div><button id="go">Bắt đầu</button><button id="stop">Dừng</button></div>
+<div class="box">Đang chạy: <b class="big" id="live">0</b> bạn ảo · Đã gửi <b id="sent">0</b> tin · Nhận <b id="recv">0</b> tin<br><span class="sub">Nhận ≈ số tin mỗi bạn ảo được phát lại từ chủ phòng. Bạn ảo dùng tên cố định lt1…lt60 để không tốn thêm lượt người dùng (MAU) của Ably mỗi lần thử.</span></div>
+<div class="box"><div id="log"></div></div>
+<script>
+const $ = id => document.getElementById(id), log = t => { $('log').textContent = new Date().toTimeString().slice(0, 8) + '  ' + t + '\n' + $('log').textContent; };
+let bots = [], timer = 0, stats = { sent:0, recv:0 }, KEY = '';
+function loadScript(src) { return new Promise((ok, no) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = no; document.head.appendChild(s); }); }
+async function getKey() {
+  if (KEY) return KEY;
+  const html = await (await fetch('index.html', { cache:'no-store' })).text(), m = html.match(/ABLY_KEY:\s*'([^']+)'/);
+  if (!m) throw new Error('Không tìm thấy ABLY_KEY trong index.html');
+  return KEY = m[1];
+}
+const UPN = 4, upOf = id => { let h = 0; for (const c of id) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h % UPN; };
+function makeBot(i, code) {
+  const id = 'lt' + (i + 1), ab = window.AblyPubSub.createClient({ key:KEY, clientId:id, echoMessages:false });
+  const up = ab.channels.get('up-' + code + '-' + upOf(id)), loc = ab.channels.get('loc-' + code + '-street1');
+  loc.subscribe('m', () => { stats.recv++; }); // nghe giống người thật để tính đúng số tin phát lại
+  const b = { id, ab, up, q:0, x:170 + Math.random() * 130, y:150 + Math.random() * 850, vx:0, vy:0, tx:0, ty:0, wait:Math.random() * 4, lastSend:0, n:'Bạn ảo ' + (i + 1),
+    c:['#3fa7d6','#f4f1ea','#e0475a','#3fbf7f','#9b6bff','#e3b23c'][i % 6], ap:'' + (i % 4) + (i % 5) + (i % 3) + '0' + (i % 2) + '1' + (i % 3) + (i % 2) };
+  b.send = () => { b.lastSend = Date.now(); stats.sent++; up.publish('m', { t:'p', id, k:'street1', q:++b.q, n:b.n, c:b.c, ap:b.ap, x:Math.round(b.x), y:Math.round(b.y), vx:Math.round(b.vx), vy:Math.round(b.vy), s:null }).catch(() => {}); };
+  return b;
+}
+function step(dt) {
+  const now = Date.now();
+  bots.forEach(b => {
+    if (b.wait > 0) { b.wait -= dt; if (b.wait <= 0) { b.tx = 165 + Math.random() * 135; b.ty = 140 + Math.random() * 900; const dx = b.tx - b.x, dy = b.ty - b.y, d = Math.hypot(dx, dy) || 1; b.vx = dx / d * 110; b.vy = dy / d * 110; b.send(); } else if (now - b.lastSend > 10000) b.send(); return; }
+    b.x += b.vx * dt; b.y += b.vy * dt;
+    if (Math.hypot(b.tx - b.x, b.ty - b.y) < 6) { b.vx = b.vy = 0; b.wait = 2 + Math.random() * 8; b.send(); }
+    else if (now - b.lastSend > 2000) b.send();
+  });
+  $('sent').textContent = stats.sent; $('recv').textContent = stats.recv;
+}
+$('go').onclick = async () => {
+  const code = $('code').value.trim(), n = Math.max(1, Math.min(60, +$('n').value || 40)), dur = Math.max(10, Math.min(900, +$('dur').value || 120));
+  if (!code) return alert('Nhập mã phòng trước.'); if (bots.length) return;
+  try { await getKey(); if (!window.AblyPubSub) await loadScript('https://cdn.jsdelivr.net/npm/@ably/pubsub-device@3/dist/cdn/ably.min.js'); } catch (e) { return log('Lỗi: ' + e.message); }
+  stats = { sent:0, recv:0 };
+  for (let i = 0; i < n; i++) { bots.push(makeBot(i, code)); $('live').textContent = bots.length; await new Promise(r => setTimeout(r, 150)); } // vào dần như người thật, tránh dồn kết nối
+  log('Đã mở ' + n + ' bạn ảo trong phòng ' + code + '. Tự dừng sau ' + dur + ' giây.');
+  let last = performance.now(); timer = setInterval(() => { const t = performance.now(); step((t - last) / 1000); last = t; }, 100);
+  setTimeout(stop, dur * 1000);
+};
+function stop() {
+  if (!bots.length) return; clearInterval(timer);
+  bots.forEach(b => { try { b.up.publish('m', { t:'bye', id:b.id }); } catch (e) {} setTimeout(() => { try { b.ab.close(); } catch (e) {} }, 500); });
+  log('Đã dừng. Gửi ' + stats.sent + ' tin, nhận ' + stats.recv + ' tin.'); bots = []; $('live').textContent = 0;
+}
+$('stop').onclick = stop;
+</script>
+</body>
+</html>
