@@ -156,7 +156,7 @@ if (typeof CanvasRenderingContext2D !== 'undefined' && !CanvasRenderingContext2D
   };
 }
 /* Ảnh thật của từng tiệm: bỏ file vào thư mục images/ với đúng tên dưới đây */
-const JOB_IMG = { tutor:'images/tutor.jpg', ship:'images/ship.jpg', waiter:'images/waiter.jpg', stock:'images/stock.jpg', intern:'images/intern.jpg', startup:'images/startup.jpg' };
+const JOB_IMG = { tutor:'images/tutor.jpg', ship:'images/ship.jpg', waiter:'images/waiter.jpg', stock:'images/stock.jpg', intern:'images/intern.jpg', future:'images/startup.jpg' };
 const SHOP_IMG = { net:'images/net.jpg', bida:'images/bida.jpg', fashion:'images/fashion.jpg', workshop:'images/workshop.jpg', food:'images/food.jpg', teddy:'images/teddy.jpg', casino:'images/casino.jpg' };
 
 /* ================== DỮ LIỆU GAME (giá tạm, sửa ở đây) ================== */
@@ -184,7 +184,7 @@ const JOBS = [
   { id:'waiter', name:'Phục vụ quán', place:'Cà Phê Ven Sông', color:'#ff7eb6', risk:'Thấp', who:'Chị chủ quán cà phê', line:'Quán chị tuyển phục vụ theo ca, 25k một giờ, có tip nữa em.', desc:'Bưng bê theo ca 5 giờ, 25k/giờ (125k/ca), thỉnh thoảng có tip.' },
   { id:'stock', name:'Cổ phiếu', place:'Sàn Chứng Khoán', color:'#3fbf7f', risk:'Vừa', who:'Anh môi giới', line:'Em mở tài khoản đầu tư không? Giá lên xuống mỗi tuần, lời lỗ tự chịu nhé.', desc:'Bỏ một phần tiền vào cổ phiếu. Mỗi tuần giá thay đổi ngẫu nhiên, có thể lời hoặc lỗ.', setup:{ q:'Bạn đầu tư bao nhiêu phần trăm số tiền đang có?', pct:[30,50,80] } },
   { id:'intern', name:'Thực tập sinh', place:'Công ty Công Nghệ', color:'#9b6bff', risk:'Thấp', who:'Chị trưởng phòng nhân sự', line:'Công ty chị đang tuyển thực tập sinh hè, phụ cấp 3 triệu một tháng. Làm tốt có thể được nhận chính thức đó em.', desc:'Thực tập tại công ty công nghệ. Phụ cấp 3 triệu/tháng. Làm tốt có cơ hội được nhận chính thức và thưởng ký hợp đồng.' },
-  { id:'startup', name:'Startup', place:'Startup', color:'#e0475a', risk:'Cao', who:'Bạn cùng khởi nghiệp', line:'Tụi mình mở một startup nhỏ đi! Lời to hoặc lỗ to đó.', desc:'Tự kinh doanh nhỏ. Doanh thu mỗi tuần dao động mạnh. Cuối kỳ: 20% cơ hội có người mua lại công ty gấp đôi vốn, còn lại thanh lý thu về 80% vốn.', setup:{ q:'Bạn bỏ bao nhiêu vốn?', amt:[3000*K,5000*K,7000*K] } }
+  { id:'future', name:'Kế hoạch tương lai', place:'FutureLens AI', color:'#e0475a', risk:'Tùy bạn', who:'Trợ lý FutureLens AI', line:'Kể cho AI nghe kế hoạch tương lai của bạn. AI sẽ phân tích thị trường Việt Nam và quy ra giá trị bạn nhận được sau hè.', desc:'Không có lương cố định. Bạn trả lời 8 câu hỏi về kế hoạch tương lai, FutureLens AI phân tích khoảng 5 phút rồi trả kết quả từ 0 đến 5 triệu.', plan:true }
 ];
 /* Lovely Street: đường vòng chìa ra sông Hàn (giống Cầu Tình Yêu), giữa vòng là khung chụp ảnh Polaroid */
 const PHOTO_COST = 100 * K;     // mỗi người đứng trong khung lúc bấm máy trả 100k và nhận 1 ảnh
@@ -278,7 +278,7 @@ let ctl = null, inbox = null, locCh = null;
 function saveGame() {
   if (!map && S.phase < 3) return;
   store('hntg_save_' + ME, { at:Date.now(), code:S.code, hosted:S.hosted, name:S.name, gender:S.gender, shirt:S.shirt, ap:S.ap,
-    st:{ phase:S.phase, wallet:S.wallet, held:S.held, principal:S.principal, ledger:S.ledger, spend:S.spend, bag:S.bag, week:S.week, timeLeft:S.timeLeft, casinoPlays:S.casinoPlays, casinoWins:S.casinoWins, txHist:S.txHist, photos:S.photos, inv:S.inv, trials:S.trials, js:S.js, late:S.late, autoWeeks:S.autoWeeks, rank:S.rank, total:S.total, seen:S.seen },
+    st:{ phase:S.phase, wallet:S.wallet, held:S.held, principal:S.principal, ledger:S.ledger, spend:S.spend, bag:S.bag, week:S.week, timeLeft:S.timeLeft, casinoPlays:S.casinoPlays, casinoWins:S.casinoWins, txHist:S.txHist, photos:S.photos, inv:S.inv, trials:S.trials, plan:S.plan, js:S.js, late:S.late, autoWeeks:S.autoWeeks, rank:S.rank, total:S.total, seen:S.seen },
     job:S.job ? S.job.id : null, map:map ? map.key : null, x:player.x, y:player.y });
 }
 setInterval(() => { if (S.name && (map || S.phase >= 3)) saveGame(); }, 2000);
@@ -795,7 +795,7 @@ function hud() {
   $('hudMoney').textContent = fmt(S.phase === 2 && S.held ? netWorth() : S.wallet);
   const s = Math.max(0, Math.ceil(S.timeLeft)), clock = String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
   $('hudTime').innerHTML = S.phase === 0 ? 'Chờ bắt đầu' : (S.paused ? '<b>Tạm dừng</b>' : S.hosted && S.timeLeft <= 0 && S.phase < 3 ? '<b>Hết giờ</b> · chờ chủ phòng' : (S.phase === 2 && S.held ? 'Tổng tài sản · ' : '') + 'Còn <b>' + clock + '</b>');
-  $('bagBtn').textContent = S.phase === 2 ? (S.job ? 'Tình huống ' + Math.min(S.week + 1, ROUNDS) + '/' + ROUNDS : 'Chưa có việc') : 'Túi đồ · ' + invCount();
+  $('bagBtn').textContent = S.phase === 2 ? (S.job ? (S.job.plan ? 'FutureLens AI' : 'Tình huống ' + Math.min(S.week + 1, ROUNDS) + '/' + ROUNDS) : 'Chưa có việc') : 'Túi đồ · ' + invCount();
   $('emoBtn').disabled = !S.emotes;
 }
 function tick(dt) {
@@ -829,6 +829,7 @@ function showPrompt(id) {
   } else {
     const p = JOBS.find(s => s.id === id);
     if (S.job && S.job.id === id) { who = p.place; text = 'Đây là nơi bạn đang làm. Mở lịch tuần để làm tiếp.'; yes = 'Mở lịch tuần'; no = 'Đóng'; act2 = openWeek; }
+    else if (S.job && p.plan) { who = p.who; text = 'Chỉ bạn nào chọn con đường Kế hoạch tương lai mới gửi kế hoạch cho FutureLens AI được.'; yes = 'Đã hiểu'; no = 'Đóng'; act2 = () => {}; }
     else if (S.job) { who = p.who; const T = (S.trials || {})[id]; text = T && T.done ? 'Bạn đã làm thử ' + p.name + ': nếu làm thật, 10 triệu thành ' + fmt(T.end) + '.' : 'Làm thử ' + p.name + '? Bắt đầu với 10 triệu tiền ảo, không cộng trừ tiền thật, chỉ để xem nghề này ra sao.'; yes = T && T.done ? 'Xem lại' : T ? 'Làm thử tiếp' : 'Làm thử'; no = 'Đóng'; act2 = () => trialOpen(p); }
     else { who = p.who; text = '"' + p.line + '"'; yes = 'Tìm hiểu'; act2 = () => openJob(p); }
   }
@@ -1666,7 +1667,7 @@ function openJob(p) {
       <div class="grid2"><button class="btn" id="mClose">Xem nơi khác</button><button class="btn gold" id="mOk" ${ok ? '' : 'disabled'}>Chọn con đường này</button></div>`);
     $('sheet').querySelectorAll('.opt').forEach(b => b.onclick = () => { pick = +b.dataset.i; render(); });
     $('mClose').onclick = closeModal;
-    $('mOk').onclick = () => { S.job = p; S.week = 0; jsInit(); if (amounts) { S.wallet -= amounts[pick]; S.held = S.principal = amounts[pick]; } act('chọn con đường ' + p.name); dirtyReport(); openWeek(); };
+    $('mOk').onclick = () => { if (p.plan) { S.job = p; S.week = 0; jsInit(); act('chọn con đường ' + p.name); dirtyReport(); return planOpen(); } S.job = p; S.week = 0; jsInit(); if (amounts) { S.wallet -= amounts[pick]; S.held = S.principal = amounts[pick]; } act('chọn con đường ' + p.name); dirtyReport(); openWeek(); };
   };
   render();
 }
@@ -1807,6 +1808,7 @@ function weekHead(title) {
 }
 function openWeek(result) {
   if (!S.job) return;
+  if (S.job.plan) return planOpen();
   if (result) {
     openModal(weekHead('Kết quả tình huống ' + S.week) + result.map(m => `<div class="msg ${m.ev ? 'ev' : ''}"><span>${esc(m.t)}</span>${m.d ? `<span class="${m.d >= 0 ? 'pos' : 'neg'}">${sgn(m.d)}</span>` : ''}</div>`).join('') +
       `<button class="btn gold" id="mNext">${S.week >= ROUNDS ? (S.hosted ? 'Xong 5 tình huống, đóng lại' : 'Xem tổng kết') : 'Tình huống tiếp theo'}</button>`);
@@ -1824,6 +1826,112 @@ function openWeek(result) {
   if ($('cuGo')) $('cuGo').onclick = () => { const t = $('cuTxt').value.trim(); if (t.length < 5) return toast('Bạn viết rõ hơn một chút nhé.'); sendCustom(sit, t); };
   $('mClose').onclick = closeModal;
 }
+/* ================== KẾ HOẠCH TƯƠNG LAI · "FutureLens AI" (thay Startup) ==================
+   Người chơi trả lời 8 câu về kế hoạch tương lai → gửi chủ phòng → màn hình "AI đang phân tích" đúng 5 phút.
+   Thật ra chủ phòng đọc và quyết định số tiền (0–5 triệu) + gõ nhận xét; kết quả hiện như AI viết. */
+const PLAN_WAIT = 300, PLAN_MAX = 5000 * K;
+const PLAN_Q = [
+  { k:'plan', t:'Kế hoạch của bạn là gì?', s:'Hãy định nghĩa thật chi tiết toàn bộ kế hoạch tương lai của bạn, với tất cả tầm nhìn và suy nghĩ của bạn: làm gì, ở đâu, vì sao, từng bước ra sao.', type:'text', min:40, rows:7 },
+  { k:'goal', t:'Mục tiêu sau 2 tháng và sau 1 năm?', s:'Ví dụ: sau 2 tháng đạt…, sau 1 năm có…', type:'text', min:10, rows:3 },
+  { k:'hours', t:'Mỗi tuần bạn dành bao nhiêu giờ cho kế hoạch này?', type:'one', o:['Dưới 5 giờ', '5–10 giờ', '10–20 giờ', '20–40 giờ', 'Trên 40 giờ'] },
+  { k:'cost', t:'Bạn sẽ bỏ ra bao nhiêu tiền?', type:'one', o:['0đ', 'Dưới 500.000đ', '500.000đ – 2 triệu', '2 – 5 triệu', 'Trên 5 triệu'] },
+  { k:'gain', t:'Bạn nhận được gì từ kế hoạch này?', s:'Chọn nhiều', type:'many', o:['Kinh nghiệm', 'Tiền', 'Kỹ năng', 'Bằng cấp, chứng chỉ', 'Mối quan hệ', 'Sự tự tin'] },
+  { k:'lose', t:'Bạn phải hy sinh gì?', s:'Chọn nhiều', type:'many', o:['Thời gian chơi', 'Giấc ngủ', 'Tiền tiêu vặt', 'Gặp bạn bè', 'Việc làm thêm', 'Thời gian cho gia đình'] },
+  { k:'pay', t:'Thu nhập bạn mong muốn sau này?', type:'one', o:['Chưa nghĩ tới', 'Dưới 8 triệu/tháng', '8–15 triệu/tháng', '15–30 triệu/tháng', 'Trên 30 triệu/tháng'] },
+  { k:'fail', t:'Nếu kế hoạch không thành, bạn sẽ làm gì?', type:'text', min:5, rows:3 }
+];
+function planState() { return S.plan = S.plan || { step:0, a:{} }; }
+function planOpen() {
+  const P = planState();
+  if (P.res && P.paid) return planResult();
+  if (P.sent) return planWait(true);
+  planAsk();
+}
+function planAsk() {
+  const P = planState(), q = PLAN_Q[P.step], v = P.a[q.k];
+  const body = q.type === 'text' ? `<textarea id="plIn" rows="${q.rows}" maxlength="${q.k === 'plan' ? 1200 : 300}" placeholder="Gõ câu trả lời của bạn…" style="width:100%;font:inherit;font-size:15px;padding:10px;border-radius:12px">${esc(v || '')}</textarea>`
+    : `<div style="display:flex;flex-direction:column;gap:8px">${q.o.map((o, i) => `<button class="opt ${q.type === 'one' ? (v === o ? 'sel' : '') : ((v || []).includes(o) ? 'sel' : '')}" data-o="${i}" style="text-align:left;padding:10px 12px;font-size:14px">${q.type === 'many' ? ((v || []).includes(o) ? '☑ ' : '☐ ') : ''}${esc(o)}</button>`).join('')}</div>`;
+  openModal(`<div><span class="tag" style="color:#e0475a">FutureLens AI · Câu ${P.step + 1}/${PLAN_Q.length}</span><h2 style="margin-top:6px">${esc(q.t)}</h2>${q.s ? `<div class="sub">${esc(q.s)}</div>` : ''}</div>
+    <div class="weeks" style="grid-template-columns:repeat(${PLAN_Q.length},1fr)">${PLAN_Q.map((_, i) => `<div class="${i < P.step ? 'done' : i === P.step ? 'cur' : ''}"></div>`).join('')}</div>
+    ${body}<div class="grid2"><button class="btn" id="plBack">${P.step ? '← Câu trước' : 'Để sau'}</button><button class="btn gold" id="plNext">${P.step === PLAN_Q.length - 1 ? 'Gửi cho AI phân tích' : 'Tiếp →'}</button></div>`);
+  const save = () => { if (q.type === 'text') P.a[q.k] = $('plIn').value.trim(); };
+  if (q.type !== 'text') $('sheet').querySelectorAll('[data-o]').forEach(b => b.onclick = () => { const o = q.o[+b.dataset.o]; if (q.type === 'one') P.a[q.k] = o; else { const L = P.a[q.k] = P.a[q.k] || []; const i = L.indexOf(o); i >= 0 ? L.splice(i, 1) : L.push(o); } planAsk(); });
+  $('plBack').onclick = () => { save(); if (!P.step) return closeModal(); P.step--; planAsk(); };
+  $('plNext').onclick = () => { save(); const a = P.a[q.k];
+    if (q.type === 'text' && (a || '').length < q.min) return toast(q.k === 'plan' ? 'AI cần bạn kể chi tiết hơn (ít nhất ' + q.min + ' ký tự).' : 'Bạn viết thêm một chút nhé.');
+    if (q.type !== 'text' && (!a || !a.length)) return toast('Bạn chọn ít nhất một ý nhé.');
+    if (P.step < PLAN_Q.length - 1) { P.step++; return planAsk(); }
+    P.rid = uid(); P.sent = Date.now(); planSend(); act('gửi kế hoạch tương lai cho FutureLens AI'); saveGame(); planWait(true); };
+}
+function planSend() { const P = S.plan; if (!P || !P.sent || P.res || !inbox) return; inbox.send({ t:'pl', id:ME, rid:P.rid, n:S.name, a:P.a, at:P.sent }); P.lastSend = Date.now(); }
+setInterval(() => { const P = S.plan; if (P && P.sent && !P.res && Date.now() - (P.lastSend || 0) > 20000) planSend(); }, 5000); // chủ phòng tải lại trang vẫn nhận được
+/* Màn hình "AI đang phân tích" — chạy đủ 5 phút dù chủ phòng duyệt sớm */
+const PLAN_STEPS = [
+  [0, 'Đọc và hiểu kế hoạch'], [20, 'Nhận diện lĩnh vực và kỹ năng chính'], [50, 'Quét nhu cầu tuyển dụng tại Việt Nam'], [95, 'So sánh thu nhập mong muốn với mặt bằng ngành'],
+  [135, 'Tính chi phí cơ hội của thời gian'], [175, 'Cân đối được và mất'], [215, 'Mô phỏng 1.000 kịch bản tương lai'], [265, 'Viết báo cáo đề xuất']
+];
+function planKw() { const w = String((S.plan && S.plan.a.plan) || '').replace(/\s+/g, ' ').trim().split(' '); return w.slice(0, 7).join(' ') + (w.length > 7 ? '…' : ''); }
+function planHours() { return { 'Dưới 5 giờ':4, '5–10 giờ':8, '10–20 giờ':15, '20–40 giờ':30, 'Trên 40 giờ':45 }[S.plan.a.hours] || 10; }
+function planLog(t) {
+  const a = S.plan.a, H = planHours() * 8, r = n => Math.floor(n * (1 + Math.sin(t * 1.7 + n) * .08));
+  return [
+    `→ tách ${r(14 + planKw().length % 9)} ý chính từ kế hoạch "${planKw()}"`,
+    `→ mục tiêu: ${esc(String(a.goal || '').slice(0, 60))}`,
+    `→ đối chiếu ${r(1240).toLocaleString('vi-VN')} tin tuyển dụng liên quan ở Đà Nẵng, TP.HCM, Hà Nội`,
+    `→ mức thu nhập mong muốn: ${esc(a.pay || '')}`,
+    `→ ${planHours()} giờ/tuần × 8 tuần hè ≈ ${H} giờ đầu tư`,
+    `→ được: ${esc((a.gain || []).join(', '))} · mất: ${esc((a.lose || []).join(', '))}`,
+    `→ kịch bản đã chạy: ${Math.min(1000, Math.floor(t * 3.7)).toLocaleString('vi-VN')}/1.000`,
+    `→ phương án dự phòng: ${esc(String(a.fail || '').slice(0, 50))}`
+  ];
+}
+function planWait(force) {
+  const P = S.plan; if (!P) return;
+  const el = Math.min(PLAN_WAIT, (Date.now() - P.sent) / 1000);
+  if (el >= PLAN_WAIT && P.res) return planReveal();
+  const pct = P.res ? Math.min(100, el / PLAN_WAIT * 100) : Math.min(99, el / PLAN_WAIT * 100), cur = PLAN_STEPS.filter(s => el >= s[0]).length - 1, logs = planLog(el);
+  const left = Math.max(0, Math.ceil(PLAN_WAIT - el)), clock = left ? Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0') : 'đang hoàn tất…';
+  const fit = Math.round(55 + 20 * Math.sin(el / 7) * (1 - el / PLAN_WAIT) + 10 * Math.sin(el / 2.3));
+  const bars = Array.from({ length:18 }, (_, i) => 6 + Math.abs(Math.sin(el * 1.3 + i * .7)) * 26);
+  const html = `<div><span class="tag" style="color:#7fd3c4">FutureLens AI · đang phân tích</span><h2 style="margin-top:6px">Kế hoạch của ${esc(S.name)}</h2><div class="sub">AI cần khoảng 5 phút. Bạn có thể đóng cửa sổ và đi dạo, mở lại bằng nút FutureLens AI ở góc dưới.</div></div>
+    <div style="background:#0b1020;border:1px solid rgba(127,211,196,.35);border-radius:14px;padding:12px;font-family:'Be Vietnam Pro',sans-serif;font-variant-numeric:tabular-nums;font-size:13px;line-height:1.7">
+      ${PLAN_STEPS.map((s, i) => { const done = i < cur, now = i === cur; const sp = now ? Math.min(99, Math.floor((el - s[0]) / (((PLAN_STEPS[i + 1] || [PLAN_WAIT])[0]) - s[0]) * 100)) : 0;
+        return `<div style="color:${done ? '#7fd58a' : now ? '#ffd23f' : 'rgba(244,234,215,.4)'}">${done ? '✔' : now ? '▶' : '○'} ${s[1]}${now ? ' … ' + sp + '%' : ''}</div>${now ? `<div style="color:#9fb3c8;padding-left:16px">${logs[i]}</div>` : ''}`; }).join('')}
+      <div style="height:8px;background:rgba(255,255,255,.08);border-radius:4px;margin:10px 0 6px;overflow:hidden"><div style="height:100%;width:${pct.toFixed(1)}%;background:linear-gradient(90deg,#7fd3c4,#3fa7d6)"></div></div>
+      <div style="display:flex;align-items:flex-end;gap:3px;height:34px">${bars.map(h => `<div style="flex:1;height:${h.toFixed(0)}px;background:rgba(63,167,214,.7);border-radius:2px"></div>`).join('')}</div>
+      <div style="display:flex;justify-content:space-between;margin-top:6px;color:#9fb3c8"><span>độ khớp tạm tính: ${fit}%</span><span>${pct.toFixed(0)}%</span></div>
+    </div>
+    <div style="text-align:center"><div class="sub">Còn lại</div><div class="big" style="color:var(--gold)">${clock}</div></div>
+    <button class="btn" id="mClose">Đóng, lát nữa xem</button>`;
+  if (force || $('plWait')) { openModal('<div id="plWait" style="display:contents">' + html + '</div>'); $('mClose').onclick = closeModal; }
+}
+setInterval(() => { if ($('plWait')) planWait(); }, 700);
+function planTips() {
+  const a = S.plan.a, T = [], h = planHours();
+  if (h <= 8) T.push('Thời gian ' + a.hours + '/tuần khá ít. Hãy khóa cứng 2–3 khung giờ cố định mỗi tuần.'); else if (h >= 30) T.push('Bạn dành nhiều thời gian (' + a.hours + '/tuần). Nhớ chừa thời gian nghỉ để không bị kiệt sức.');
+  if ((a.lose || []).includes('Giấc ngủ')) T.push('Đừng hy sinh giấc ngủ: thiếu ngủ làm giảm hiệu quả học và làm việc.');
+  if (a.cost && a.cost !== '0đ') T.push('Lập bảng chi phí cho khoản ' + a.cost + ' và tìm phương án rẻ hơn trước khi chi.');
+  if ((a.gain || []).includes('Mối quan hệ')) T.push('Mỗi tháng gặp ít nhất 1 người đã đi trước trong lĩnh vực này.');
+  if (a.pay && /30|15/.test(a.pay)) T.push('Mức thu nhập ' + a.pay + ' cần kỹ năng chuyên sâu. Chia mục tiêu thành từng nấc nhỏ theo năm.');
+  T.push('Viết kết quả mỗi tuần ra giấy để thấy mình tiến bộ.'); T.push('Chuẩn bị sẵn phương án dự phòng như bạn đã nghĩ.');
+  return T.slice(0, 3);
+}
+function planReveal() {
+  const P = S.plan; if (!P.paid) { P.paid = true; const amt = Math.max(0, Math.min(PLAN_MAX, P.res.amt | 0)); if (amt) pay(CAT(), amt); act('nhận kết quả FutureLens AI: +' + fmt(amt)); saveGame(); hud(); report(true); }
+  planResult();
+}
+function planResult() {
+  const P = S.plan, amt = Math.max(0, Math.min(PLAN_MAX, P.res.amt | 0)), score = Math.round(38 + amt / PLAN_MAX * 57);
+  openModal(`<div><span class="tag" style="color:#7fd3c4">FutureLens AI · báo cáo</span><h2 style="margin-top:6px">Kết quả phân tích</h2></div>
+    <div style="text-align:center"><div class="sub">Độ khả thi của kế hoạch</div><div class="big" style="color:${score >= 70 ? 'var(--green)' : score >= 50 ? 'var(--gold)' : 'var(--red)'}">${score}%</div>
+      <div class="sub">Giá trị quy đổi sau hè</div><div class="big" style="color:var(--green)">+${fmt(amt)}</div></div>
+    ${P.res.c ? `<div class="msg" style="display:block;line-height:1.55">🤖 ${esc(P.res.c)}</div>` : ''}
+    <div style="font-weight:600;font-size:14px">Gợi ý của AI</div>${planTips().map(t => `<div class="msg" style="display:block">• ${esc(t)}</div>`).join('')}
+    <button class="btn gold" id="mClose">Đóng</button>`, true);
+  $('mClose').onclick = closeModal;
+}
+function planGot(m) { const P = S.plan; if (!P || P.rid !== m.rid || P.res) return; P.res = { amt:Math.max(0, Math.min(PLAN_MAX, Math.round(+m.amt || 0))), c:String(m.c || '').slice(0, 400) }; saveGame(); if ($('plWait')) planWait(); }
+setInterval(() => { const P = S.plan; if (P && P.res && !P.paid && P.sent && Date.now() - P.sent >= PLAN_WAIT * 1000) { if ($('plWait') || !uiOpen) planReveal(); } }, 1000);
 /* ---- LÀM THỬ NGHỀ KHÁC (GĐ2, sau khi đã chọn nghề chính) ----
    Mỗi nghề thử 1 lần, bắt đầu với 10 triệu tiền ảo. Không cộng trừ tiền thật, không báo chủ phòng. */
 const TRIAL_START = 10000 * K, TR_KEYS = ['wallet', 'held', 'principal', 'ledger', 'js', 'week', 'job'];
@@ -1984,6 +2092,7 @@ function onCtl(m) {
     S.seen[m.id] = 1; pay('Chủ phòng điều chỉnh', m.amt);
     toast('Chủ phòng ' + (m.amt >= 0 ? 'cộng ' : 'trừ ') + fmt(Math.abs(m.amt)) + (m.note ? ': ' + m.note : ''), 5000); hud(); report(true);
   }
+  if (m.t === 'plr' && m.to === ME) planGot(m);
   if (m.t === 'cg' && m.to === ME && S.cuWait && m.rid === S.cuWait.rid) cuDone({ amt:Math.max(-5000 * K, Math.min(5000 * K, Math.round(+m.amt || 0))) });
   if (m.t === 'nm' && m.to === ME) { S.name = cleanName(m.n); store('hntg_me', { name:S.name, gender:S.gender, shirt:S.shirt, ap:S.ap, code:S.code }); sendPos(true); report(true); toast('Chủ phòng đã đổi tên bạn thành ' + S.name, 5000); }
   if (m.t === 'call' && !S.seen[m.id]) {
@@ -2114,6 +2223,7 @@ function onIn(m) {
   if (!HOST.ok[m.id]) return;
   if (m.t === 'r') { const isNew = !HOST.players[m.id]; HOST.players[m.id] = { id:m.id, n:m.n, loc:m.loc, w:m.w, h:m.h || 0, job:m.job, ph:m.ph, wk:m.wk, sp:m.sp || {}, lg:m.lg || {}, done:m.done, late:!!m.late, seen:Date.now() }; if (isNew) feed(m.n + ' vào phòng'); }
   if (m.t === 'a') feed(m.n + ' ' + m.x);
+  if (m.t === 'pl') { if (plqAdd(m)) { feed(m.n + ' gửi kế hoạch tương lai cho FutureLens AI'); hostRender(true); } return; }
   if (m.t === 'cu' && m.rid && !HOST.cus[m.rid]) { HOST.cus[m.rid] = { to:m.id, n:String(m.n || '').slice(0, 16), job:String(m.job || '').slice(0, 20), wk:+m.wk || 0, q:String(m.q || '').slice(0, 200), x:String(m.x || '').slice(0, 240), at:Date.now() }; feed(m.n + ' gửi cách của mình'); }
   if (m.t === 'pho' && m.spec && m.spec.sid && !HOST.photos[m.spec.sid]) { const sp = cleanSpec(m.spec); HOST.photos[sp.sid] = sp; feed('Ảnh mới ở Photobooth Cầu Rồng: ' + sp.mem.map(x => x.n).join(', ')); }
 }
@@ -2133,7 +2243,8 @@ async function showHost() {
   HOST.code = store('hntg_room') || String(Math.floor(1000 + Math.random() * 9000)); store('hntg_room', HOST.code);
   const hs = store('hntg_host');
   if (hs && hs.code === HOST.code && Date.now() - hs.at < 6 * 3600e3) { Object.assign(HOST, { ph:hs.ph, endAt:hs.endAt, rem:hs.rem, pa:hs.pa, em:hs.em, players:hs.players || {}, feed:hs.feed || [], pending:hs.pending || {}, ok:hs.ok || {}, rj:hs.rj || {}, photos:hs.photos || {}, cus:hs.cus || {}, dur:hs.dur || HOST.dur }); }
-  ctl = chan('ctl-' + HOST.code, () => {}); inbox = chan('in-' + HOST.code, m => { AGG.cnt.inb++; onIn(m); });
+  ctl = chan('ctl-' + HOST.code, m => { if (m && m.t === 'plr' && m.rid && PLQ.items[m.rid]) { feed(PLQ.items[m.rid].n + ' (Kế hoạch tương lai) → +' + fmt(+m.amt || 0) + ' (duyệt trên điện thoại)'); PLQ.done[m.rid] = 1; delete PLQ.items[m.rid]; hostRender(true); } });
+  inbox = chan('in-' + HOST.code, m => { AGG.cnt.inb++; onIn(m); });
   { const cs = ctl.send; ctl.send = p => { AGG.cnt.bc++; cs(p); }; }
   aggStart(HOST.code);
   HOST.chat = HOST.chat || []; chatCh = chan('chat-' + HOST.code, m => { AGG.cnt.chat++; if (m && m.t === 'c') { HOST.chat.push({ n:String(m.n || '').slice(0, 16), x:cleanChat(m.x), t:new Date().toTimeString().slice(0, 5) }); if (HOST.chat.length > 150) HOST.chat.shift(); hostChat(); } });
@@ -2150,6 +2261,7 @@ async function showHost() {
     </div>
     <div class="ctrls" style="align-items:center"><span class="sub" style="font-size:14px">Thời gian:</span><label style="display:flex;align-items:center;gap:6px">GĐ 1 <input id="d1" type="number" min="1" max="60" style="width:80px"> phút</label><label style="display:flex;align-items:center;gap:6px">GĐ 2 <input id="d2" type="number" min="1" max="60" style="width:80px"> phút</label><button class="btn" id="tMinus">− 1 phút</button><button class="btn" id="tPlus">+ 1 phút</button><span class="sub">Hết giờ game không tự chuyển: bạn bấm chuyển khi cả lớp xong.</span></div>
     <div class="panel card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h2>Chat lớp</h2><button class="btn" id="hChTog"></button></div><div id="hChat" style="max-height:260px;overflow:auto;display:flex;flex-direction:column;gap:4px"></div><div style="display:flex;gap:8px"><input id="hChIn" type="text" maxlength="140" placeholder="Nhắn cả lớp với tư cách chủ phòng"><button class="btn gold" id="hChGo">Gửi</button></div></div>
+    <div class="panel card" id="hPlCard" style="border-color:rgba(224,71,90,.6)"><h2>FutureLens · chờ duyệt <span id="hPlN" class="tag" style="font-size:14px"></span></h2><div class="sub">Nên duyệt trên điện thoại để máy chiếu không lộ: mở <b>${esc(location.origin + location.pathname)}#duyet</b> (cùng PIN, nhập mã phòng ${HOST.code}).</div><button class="btn" id="hPlTog">Hiện ở đây (đừng để máy chiếu thấy)</button><div id="hPl" class="hidden" style="display:flex;flex-direction:column;gap:10px"></div></div>
     <div class="panel card" id="hCuCard" style="border-color:rgba(155,107,255,.6)"><h2>Cách của tôi · chờ chấm <span id="hCuN" class="tag" style="font-size:14px"></span></h2><div id="hCu" style="display:flex;flex-direction:column;gap:10px"></div><div class="sub">Mỗi câu chờ tối đa 2 phút. Quá giờ người chơi chỉ nhận lương cơ bản. Câu đã chấm được ghi vào mục Diễn biến.</div></div>
     <div class="panel card" id="hPendCard" style="border-color:rgba(127,213,138,.5)"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h2>Chờ duyệt vào phòng <span id="hPendN" class="tag" style="font-size:14px"></span></h2><button class="btn gold" id="hOkAll">Duyệt tất cả</button></div><div id="hPend"></div><div class="sub">Chỉ những bạn được duyệt mới vào được phòng. Đối chiếu tên với danh sách lớp trước khi duyệt.</div></div>
     <div class="hostrow">
@@ -2184,6 +2296,8 @@ async function showHost() {
   $('d2').onchange = () => { HOST.dur[2] = Math.max(1, Math.min(60, +$('d2').value || 5)) * 60; saveHost(); };
   const addMin = d => { if (HOST.ph !== 1 && HOST.ph !== 2) return toast('Chỉ chỉnh được khi đang ở GĐ 1 hoặc GĐ 2'); if (HOST.pa) HOST.rem = Math.max(0, HOST.rem + d); else HOST.endAt = Math.max(Date.now(), (hostRem() > 0 ? HOST.endAt : Date.now()) + d * 1000); feed((d > 0 ? 'Thêm ' : 'Bớt ') + '1 phút'); hostBroadcast(); hostRender(true); };
   $('tPlus').onclick = () => addMin(60); $('tMinus').onclick = () => addMin(-60);
+  $('hPlTog').onclick = () => { PLQ.show = !PLQ.show; $('hPl').classList.toggle('hidden', !PLQ.show); $('hPlTog').textContent = PLQ.show ? 'Ẩn đi' : 'Hiện ở đây (đừng để máy chiếu thấy)'; };
+  plqWire($('hPl'), m => ctl.send(m), (p, amt) => { feed(p.n + ' (Kế hoạch tương lai) → +' + fmt(amt)); hostRender(true); });
   $('hCu').onclick = e => { const b = e.target.closest('button[data-rid]'); if (!b) return; const c = HOST.cus[b.dataset.rid]; if (!c) return;
     let amt = b.dataset.a === 'x' ? Math.round((+$('cx-' + b.dataset.rid).value || 0) * 1000) : +b.dataset.a;
     ctl.send({ t:'cg', id:uid(), to:c.to, rid:b.dataset.rid, amt }); feed(c.n + ' (' + c.job + ', TH ' + c.wk + '): "' + c.x + '" → ' + sgn(amt)); delete HOST.cus[b.dataset.rid]; hostRender(true); };
@@ -2218,6 +2332,61 @@ function csv() {
   return [head, ...rows].map(r => r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',')).join('\n');
 }
 let lastMoneyHtml = '';
+/* ================== CHỦ PHÒNG DUYỆT "FutureLens AI" ==================
+   Hàng chờ kế hoạch tương lai. Trên laptop đang chiếu thì ẩn mặc định; nên duyệt trên điện thoại bằng link …#duyet */
+const PLQ = { items:{}, done:{}, show:false };
+function plqAdd(m) {
+  if (!m || m.t !== 'pl' || !m.rid || PLQ.done[m.rid] || PLQ.items[m.rid]) return false;
+  const a = m.a || {}, cl = (v, n) => Array.isArray(v) ? v.slice(0, 8).map(x => String(x).slice(0, 40)) : String(v || '').slice(0, n);
+  PLQ.items[m.rid] = { to:m.id, n:String(m.n || '').slice(0, 16), at:+m.at || Date.now(), a:{ plan:cl(a.plan, 1200), goal:cl(a.goal, 300), hours:cl(a.hours, 30), cost:cl(a.cost, 30), gain:cl(a.gain), lose:cl(a.lose), pay:cl(a.pay, 30), fail:cl(a.fail, 300) } };
+  return true;
+}
+function plqHtml() {
+  const L = Object.entries(PLQ.items).sort((x, y) => x[1].at - y[1].at);
+  if (!L.length) return '<div class="sub">Chưa có kế hoạch nào đang chờ.</div>';
+  const row = (k, v) => `<div style="font-size:13px"><b>${k}:</b> ${esc(Array.isArray(v) ? v.join(', ') : v)}</div>`;
+  return L.map(([rid, p]) => `<div class="msg" data-rid="${rid}" style="display:flex;flex-direction:column;gap:8px;background:rgba(224,71,90,.1)">
+    <div style="display:flex;justify-content:space-between;gap:8px"><b>${esc(p.n)}</b><span class="sub" data-pcd="${p.at}"></span></div>
+    <div style="font-size:15px;line-height:1.5;white-space:pre-wrap">${esc(p.a.plan)}</div>
+    ${row('Mục tiêu', p.a.goal)}${row('Giờ/tuần', p.a.hours)}${row('Bỏ ra', p.a.cost)}${row('Được', p.a.gain)}${row('Hy sinh', p.a.lose)}${row('Thu nhập mong muốn', p.a.pay)}${row('Nếu không thành', p.a.fail)}
+    <div class="ctrls">${[0, 500, 1000, 2000, 3000, 4000, 5000].map(v => `<button class="btn" data-pv="${v}" style="min-height:38px;padding:0 10px">${v ? (v >= 1000 ? v / 1000 + 'tr' : v + 'k') : '0'}</button>`).join('')}</div>
+    <div style="display:flex;gap:8px;align-items:center"><input type="number" data-pamt min="0" max="5000" step="100" placeholder="nghìn đồng (0–5000)" style="flex:1"><span class="sub">k</span></div>
+    <textarea data-pc rows="2" maxlength="400" placeholder="Nhận xét hiện ra như AI viết, vd: Kế hoạch rõ ràng, nhưng 5 giờ/tuần là quá ít cho mục tiêu IELTS 7.0…" style="width:100%"></textarea>
+    <button class="btn gold" data-psend>Gửi kết quả (hiện sau đủ 5 phút)</button></div>`).join('');
+}
+function plqWire(box, send, onSent) {
+  box.onclick = e => {
+    const card = e.target.closest('[data-rid]'); if (!card) return; const rid = card.dataset.rid, p = PLQ.items[rid]; if (!p) return;
+    const pv = e.target.closest('[data-pv]'); if (pv) { card.querySelector('[data-pamt]').value = pv.dataset.pv; card.querySelectorAll('[data-pv]').forEach(b => b.classList.toggle('gold', b === pv)); return; }
+    if (e.target.closest('[data-psend]')) {
+      const raw = card.querySelector('[data-pamt]').value; if (raw === '') return toast('Chọn hoặc nhập số tiền trước.');
+      const amt = Math.max(0, Math.min(5000, Math.round(+raw || 0))) * K, c = card.querySelector('[data-pc]').value.trim();
+      send({ t:'plr', id:uid(), to:p.to, rid, amt, c }); PLQ.done[rid] = 1; delete PLQ.items[rid]; onSent(p, amt); toast('Đã gửi kết quả cho ' + p.n);
+    }
+  };
+}
+function plqTick(box) { if (!box) return; box.querySelectorAll('[data-pcd]').forEach(el => { const left = Math.max(0, PLAN_WAIT - Math.floor((Date.now() - +el.dataset.pcd) / 1000)); el.textContent = left ? 'AI hiện kết quả sau ' + Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0') : 'đã hết 5 phút, người chơi đang chờ!'; el.style.color = left ? '' : 'var(--red)'; }); }
+function plqRender(box) { if (!box) return; const k = Object.keys(PLQ.items).sort().join(); if (box.dataset.k !== k) { box.dataset.k = k; box.innerHTML = plqHtml(); } plqTick(box); }
+/* Trang duyệt riêng trên điện thoại: link#duyet */
+async function showReview() {
+  document.body.classList.add('host'); $('world').classList.add('hidden'); $('pageBox').classList.remove('hidden');
+  if (store('hntg_auth', undefined, true) !== CONFIG.HOST_PIN_HASH) {
+    $('pageBox').innerHTML = `<div class="panel card" style="max-width:440px;margin:40px auto"><h2>Duyệt FutureLens AI</h2><div><label for="pin">Mã PIN chủ phòng</label><input id="pin" type="password" inputmode="numeric" style="margin-top:6px"></div><button class="btn gold" id="pinGo">Mở</button></div>`;
+    const go = async () => { const h = await sha256('hntg:' + $('pin').value); if (h === CONFIG.HOST_PIN_HASH) { store('hntg_auth', h, true); showReview(); } else toast('Sai mã PIN'); };
+    $('pinGo').onclick = go; $('pin').onkeydown = e => { if (e.key === 'Enter') go(); }; return;
+  }
+  const code = store('hntg_rv_code') || store('hntg_room') || '';
+  $('pageBox').innerHTML = `<div class="panel card" style="max-width:640px;margin:16px auto;width:100%"><div class="sub" style="letter-spacing:2px;color:var(--gold);font-weight:700">DUYỆT FUTURELENS AI</div>
+    <div style="display:flex;gap:8px;align-items:center"><label for="rvC">Mã phòng</label><input id="rvC" inputmode="numeric" maxlength="6" value="${esc(code)}" style="width:110px;letter-spacing:3px"><button class="btn" id="rvGo">Kết nối</button><span class="sub" id="rvSt"></span></div>
+    <div id="rvQ" style="display:flex;flex-direction:column;gap:10px"></div><div class="sub">Người chơi luôn thấy màn hình "AI đang phân tích" đủ 5 phút, dù bạn gửi sớm. Quá 5 phút mà chưa gửi thì họ phải chờ tiếp.</div></div>`;
+  let ctlR = null, inR = null;
+  const connect = async () => { const c = $('rvC').value.trim(); if (!c) return toast('Nhập mã phòng trên máy chiếu.'); store('hntg_rv_code', c); await loadNet(); if (ctlR) { ctlR.close(); inR.close(); }
+    ctlR = chan('ctl-' + c, m => { if (m && m.t === 'plr' && m.rid) { PLQ.done[m.rid] = 1; delete PLQ.items[m.rid]; plqRender($('rvQ')); } });
+    inR = chan('in-' + c, m => { if (plqAdd(m)) plqRender($('rvQ')); });
+    $('rvSt').textContent = NET.mode === 'local' ? '(chế độ thử cùng máy)' : 'đã kết nối · chờ kế hoạch…'; };
+  $('rvGo').onclick = connect; plqWire($('rvQ'), m => ctlR && ctlR.send(m), () => plqRender($('rvQ')));
+  setInterval(() => plqRender($('rvQ')), 1000); if (code) connect();
+}
 /* ================== CHỦ PHÒNG GOM VỊ TRÍ (giảm lượt tin Ably) ==================
    Người chơi gửi vị trí lên 4 kênh "up-…" (chỉ chủ phòng nghe). Mỗi 0,4 giây chủ phòng gom vị trí
    của từng khu (phố, từng tiệm) thành 1 tin "snap" phát lại cho khu đó. */
@@ -2281,6 +2450,7 @@ function hostRender(force) {
   $('hBoard').innerHTML = board.map((p, i) => `<div class="lb"><b>#${i + 1}</b><span>${esc(p.n)}${p.late ? ' <span class="sub">· vào trễ</span>' : ''}${p.done ? '' : ' <span class="sub">· đang chơi</span>'}</span><span class="sub">${esc(p.job || '—')}</span><b style="text-align:right;color:var(--green)">${fmt(p.w + p.h)}</b></div>`).join('') || '<div class="sub">Chưa có dữ liệu.</div>';
   const tot = SPEND_PLACES.map(s => [s, ps.reduce((t, p) => t + Math.max(0, p.sp[s.id] || 0), 0)]).sort((a, b) => b[1] - a[1]), mx = Math.max(1, tot[0][1]);
   $('hSpend').innerHTML = tot.map(([s, v]) => `<div><div class="rowb"><span>${esc(s.name)}</span><span>${fmt(v)}</span></div><div class="bar"><i style="width:${Math.round(v / mx * 100)}%;background:${s.color}"></i></div></div>`).join('');
+  { const n = Object.keys(PLQ.items).length; $('hPlN').textContent = n ? n + ' kế hoạch' : 'trống'; if (PLQ.show) plqRender($('hPl')); }
   Object.keys(HOST.cus).forEach(k => { if (Date.now() - HOST.cus[k].at > (CU_WAIT + 5) * 1000) delete HOST.cus[k]; });
   const cl = Object.entries(HOST.cus).sort((a, b) => a[1].at - b[1].at), ck = cl.map(c => c[0]).join();
   $('hCuN').textContent = cl.length ? cl.length + ' câu' : 'trống';
@@ -2296,6 +2466,7 @@ function hostRender(force) {
 window.addEventListener('hashchange', () => location.reload());
 window.addEventListener('pagehide', () => { if (locCh) locCh.send({ t:'bye', id:ME }); if (upChan()) upChan().send({ t:'bye', id:ME }); });
 if (location.hash === '#host') showHost();
+else if (location.hash === '#duyet') showReview();
 else {
   resize(); requestAnimationFrame(loop);
   const sv = store('hntg_save_' + ME);
